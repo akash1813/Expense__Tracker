@@ -1,0 +1,10 @@
+/.DS_Store
+/backend/node_modules
+
+/backend/package-lock.json
+/frontend/.DS_Store
+/frontend/expense-tracker/node_modules
+/frontend/expense-tracker/package-lock.json
+/frontend/expense-tracker/.DS_Store
+/frontend/.DS_Store
+.vercel
