@@ -27,22 +27,8 @@ router.put("/change-password", changePassword);
 // Handle profile image upload with error handling
 router.post(
   "/upload-image",
-  (req, res, next) => {
-    upload.single('image')(req, res, (err) => {
-      if (err) {
-        return handleUploadErrors(err, req, res, next);
-      }
-      if (!req.file) {
-        return res.status(400).json({
-          success: false,
-          message: 'No image file provided or invalid file type'
-        });
-      }
-      next();
-    });
-  },
-  uploadProfileImage
-);
+   uploadProfileImage
+    );
 
 module.exports = router;
 
