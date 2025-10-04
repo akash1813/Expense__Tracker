@@ -96,61 +96,29 @@ exports.changePassword = async (req, res) => {
 // Upload Profile Image
 exports.uploadProfileImage = async (req, res) => {
     try {
-        if (!req.file) {
-            return res.status(400).json({ 
+        const { secure_url } = req.body;
+        if (!secure_url) {
+            return res.status(400).json({
                 success: false,
-                message: 'No file uploaded or file type not supported' 
+                message: 'No image URL provided.'
             });
         }
 
         const user = await User.findById(req.user._id);
         if (!user) {
-            // Clean up the uploaded file if user not found
-            fs.unlink(req.file.path, (err) => {
-                if (err) console.error('Error deleting temp file:', err);
-            });
-            return res.status(404).json({ 
+            return res.status(404).json({
                 success: false,
-                message: 'User not found' 
+                message: 'User not found'
             });
         }
-
-        // Upload to Cloudinary
-        const result = await cloudinary.uploader.upload(req.file.path, {
-            folder: 'expense-tracker/profile-images',
-            width: 200,
-            height: 200,
-            crop: 'fill',
-            quality: 'auto:good',
-            format: 'jpg'
-        });
-
-        // Delete the temporary file
-        fs.unlink(req.file.path, (err) => {
-            if (err) console.error('Error deleting temp file:', err);
-        });
-
-        // Store the previous image URL for cleanup
-        const oldImageUrl = user.profileImageUrl;
 
         // Update user's profile image URL
-        user.profileImageUrl = result.secure_url;
+        user.profileImageUrl = secure_url;
         const updatedUser = await user.save();
-
-        // If there was a previous image, delete it from Cloudinary
-        if (oldImageUrl) {
-            try {
-                const publicId = oldImageUrl.split('/').pop().split('.')[0];
-                await cloudinary.uploader.destroy(`expense-tracker/profile-images/${publicId}`);
-            } catch (cleanupError) {
-                console.error('Error cleaning up old image:', cleanupError);
-                // Don't fail the request if cleanup fails
-            }
-        }
 
         res.status(200).json({
             success: true,
-            message: 'Profile image uploaded successfully',
+            message: 'Profile image updated successfully',
             user: {
                 _id: updatedUser._id,
                 fullName: updatedUser.fullName,
@@ -160,13 +128,6 @@ exports.uploadProfileImage = async (req, res) => {
         });
     } catch (error) {
         console.error('Error uploading profile image:', error);
-        
-        // Clean up the uploaded file if there was an error
-        if (req.file?.path) {
-            fs.unlink(req.file.path, (err) => {
-                if (err) console.error('Error deleting temp file after error:', err);
-            });
-        }
         
         res.status(500).json({
             success: false,
